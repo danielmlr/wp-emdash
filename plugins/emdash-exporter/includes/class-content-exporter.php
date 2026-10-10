@@ -449,8 +449,13 @@ class EmDash_Content_Exporter {
         
         $formatted = [];
         foreach ($fields as $key => $value) {
+            // Relationship, post object, user and taxonomy fields set to the
+            // object return format give WP_Post, WP_User and WP_Term objects
+            if (is_object($value)) {
+                $formatted[$key] = $this->format_acf_object($value);
+            }
             // Handle image fields (return ID or array)
-            if (is_array($value) && isset($value['ID'])) {
+            elseif (is_array($value) && isset($value['ID'])) {
                 $formatted[$key] = [
                     'type' => 'image',
                     'id' => $value['ID'],
@@ -472,6 +477,20 @@ class EmDash_Content_Exporter {
         }
         
         return $formatted;
+    }
+    
+    /**
+     * Reduce a post, user or term object to its ID, so a related post's
+     * content and password never leave the site with the field value
+     */
+    private function format_acf_object($value) {
+        if ($value instanceof WP_Post || $value instanceof WP_User) {
+            return $value->ID;
+        }
+        if ($value instanceof WP_Term) {
+            return $value->term_id;
+        }
+        return $value;
     }
     
     /**
