@@ -454,6 +454,10 @@ class EmDash_Content_Exporter {
             if (is_object($value)) {
                 $formatted[$key] = $this->format_acf_object($value);
             }
+            // User fields on the default array format
+            elseif (is_array($value) && isset($value['ID'], $value['user_email'])) {
+                $formatted[$key] = $value['ID'];
+            }
             // Handle image fields (return ID or array)
             elseif (is_array($value) && isset($value['ID'])) {
                 $formatted[$key] = [
