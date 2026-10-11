@@ -14,7 +14,8 @@ const summaries = readdirSync(".changeset")
 	.sort()
 	.map((name) => {
 		const text = readFileSync(`.changeset/${name}`, "utf8");
-		return text.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+		const [, releases = "", summary = ""] = text.match(/^---\n([\s\S]*?)^---\n([\s\S]*)/m) ?? [];
+		return releases.trim() ? summary.trim() : "";
 	})
 	.filter(Boolean);
 
