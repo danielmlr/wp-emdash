@@ -119,6 +119,40 @@ class EmDash_Exporter_REST_Controller {
             'callback' => [$this, 'get_options'],
             'permission_callback' => [$this, 'check_permission'],
         ]);
+        
+        register_rest_route(self::NAMESPACE, '/menus', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_menus'],
+            'permission_callback' => [$this, 'check_permission'],
+        ]);
+        
+        register_rest_route(self::NAMESPACE, '/comments', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_comments'],
+            'permission_callback' => [$this, 'check_permission'],
+            'args' => [
+                'per_page' => [
+                    'type' => 'integer',
+                    'default' => 500,
+                    'minimum' => 1,
+                    'maximum' => 500,
+                ],
+                'page' => [
+                    'type' => 'integer',
+                    'default' => 1,
+                    'minimum' => 1,
+                ],
+            ],
+        ]);
+        
+        // Public: reflects whether the Authorization header reaches PHP.
+        // Used by the wizard's loopback health check (some Apache/CGI setups
+        // strip the header, which silently breaks Application Passwords).
+        register_rest_route(self::NAMESPACE, '/header-check', [
+            'methods' => 'GET',
+            'callback' => [$this, 'header_check'],
+            'permission_callback' => '__return_true',
+        ]);
     }
     
     /**
@@ -137,6 +171,50 @@ class EmDash_Exporter_REST_Controller {
             'rest_forbidden',
             __('You must be authenticated with export permissions.', 'emdash-exporter'),
             ['status' => rest_authorization_required_code()]
+        );
+    }
+    
+    /**
+     * Header check endpoint - reports whether an Authorization header arrived
+     */
+    public function header_check() {
+        $header = null;
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $header = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (function_exists('getallheaders')) {
+            // mod_php can expose the header via the Apache API only,
+            // without populating $_SERVER['HTTP_AUTHORIZATION'].
+            foreach (getallheaders() as $name => $value) {
+                if (strtolower($name) === 'authorization') {
+                    $header = $value;
+                    break;
+                }
+            }
+        }
+        
+        return [
+            'authorization_header_received' => !empty($header),
+        ];
+    }
+    
+    /**
+     * Get all navigation menus
+     */
+    public function get_menus() {
+        $exporter = new EmDash_Menu_Exporter();
+        return $exporter->get_menus();
+    }
+    
+    /**
+     * Get comments (approved + pending), paginated
+     */
+    public function get_comments($request) {
+        $exporter = new EmDash_Comment_Exporter();
+        return $exporter->get_comments(
+            $request->get_param('per_page'),
+            $request->get_param('page')
         );
     }
     
@@ -166,7 +244,9 @@ class EmDash_Exporter_REST_Controller {
         $has_yoast = defined('WPSEO_VERSION');
         $has_rankmath = class_exists('RankMath');
         
-        return [
+        $i18n = EmDash_I18n_Exporter::site_info();
+        
+        return array_merge($i18n ? ['i18n' => $i18n] : [], [
             'emdash_exporter' => EMDASH_EXPORTER_VERSION,
             'wordpress_version' => get_bloginfo('version'),
             'site' => [
@@ -185,15 +265,18 @@ class EmDash_Exporter_REST_Controller {
             ],
             'post_types' => $post_type_info,
             'media_count' => (int) wp_count_posts('attachment')->inherit,
+            'menu_count' => count(wp_get_nav_menus()),
             'endpoints' => [
                 'analyze' => rest_url(self::NAMESPACE . '/analyze'),
                 'content' => rest_url(self::NAMESPACE . '/content'),
                 'media' => rest_url(self::NAMESPACE . '/media'),
                 'taxonomies' => rest_url(self::NAMESPACE . '/taxonomies'),
                 'options' => rest_url(self::NAMESPACE . '/options'),
+                'menus' => rest_url(self::NAMESPACE . '/menus'),
+                'comments' => rest_url(self::NAMESPACE . '/comments'),
             ],
             'auth_instructions' => $this->get_auth_instructions(),
-        ];
+        ]);
     }
     
     /**
@@ -273,7 +356,9 @@ class EmDash_Exporter_REST_Controller {
             $result[] = [
                 'name' => $taxonomy->name,
                 'label' => $taxonomy->label,
+                'label_singular' => $taxonomy->labels->singular_name ?? $taxonomy->label,
                 'hierarchical' => $taxonomy->hierarchical,
+                'post_types' => array_values((array) $taxonomy->object_type),
                 'terms' => $term_data,
             ];
         }
@@ -308,6 +393,25 @@ class EmDash_Exporter_REST_Controller {
         $options = [];
         foreach ($option_keys as $key) {
             $options[$key] = get_option($key);
+        }
+        
+        // Site identity media (Customizer logo + site icon), with resolved
+        // URLs so the importer can side-load the files.
+        $custom_logo = (int) get_theme_mod('custom_logo');
+        if ($custom_logo) {
+            $logo_url = wp_get_attachment_url($custom_logo);
+            if ($logo_url) {
+                $options['custom_logo'] = $custom_logo;
+                $options['custom_logo_url'] = $logo_url;
+            }
+        }
+        $site_icon = (int) get_option('site_icon');
+        if ($site_icon) {
+            $icon_url = wp_get_attachment_url($site_icon);
+            if ($icon_url) {
+                $options['site_icon'] = $site_icon;
+                $options['site_icon_url'] = $icon_url;
+            }
         }
         
         // Include Yoast settings if available

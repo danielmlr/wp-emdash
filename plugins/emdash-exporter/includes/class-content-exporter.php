@@ -102,6 +102,12 @@ class EmDash_Content_Exporter {
             $result['acf'] = $this->analyze_acf_fields();
         }
         
+        // Multilingual plugin info (WPML/Polylang) if available
+        $i18n = EmDash_I18n_Exporter::site_info();
+        if ($i18n) {
+            $result['i18n'] = $i18n;
+        }
+        
         return $result;
     }
     
@@ -156,7 +162,16 @@ class EmDash_Content_Exporter {
             'comment_status' => $post->comment_status,
             'ping_status' => $post->ping_status,
             'guid' => $post->guid,
+            // The real public URL, so the importer can build a redirect map
+            // that preserves SEO when the URL structure changes.
+            'permalink' => get_permalink($post),
         ];
+        
+        // Locale + translation group from WPML/Polylang, when active
+        $i18n = EmDash_I18n_Exporter::post_info($post->ID);
+        if (!empty($i18n)) {
+            $data = array_merge($data, $i18n);
+        }
         
         // Taxonomies
         $taxonomies = get_object_taxonomies($post->post_type);
@@ -274,9 +289,10 @@ class EmDash_Content_Exporter {
             // Single values are unwrapped
             $clean_meta[$key] = count($values) === 1 ? $values[0] : $values;
             
-            // Try to unserialize PHP serialized data
-            if (is_string($clean_meta[$key]) && $this->is_serialized($clean_meta[$key])) {
-                $unserialized = @unserialize($clean_meta[$key]);
+            // Decode PHP-serialized data. allowed_classes=false prevents
+            // object injection from untrusted database values.
+            if (is_string($clean_meta[$key]) && is_serialized($clean_meta[$key])) {
+                $unserialized = @unserialize($clean_meta[$key], ['allowed_classes' => false]);
                 if ($unserialized !== false) {
                     $clean_meta[$key] = $unserialized;
                 }
@@ -284,17 +300,6 @@ class EmDash_Content_Exporter {
         }
         
         return $clean_meta;
-    }
-    
-    /**
-     * Check if a string is PHP serialized
-     */
-    private function is_serialized($data) {
-        if (!is_string($data)) return false;
-        $data = trim($data);
-        if ($data === 'N;') return true;
-        if (preg_match('/^([aOsbi]):/', $data)) return true;
-        return false;
     }
     
     /**
@@ -361,7 +366,7 @@ class EmDash_Content_Exporter {
         if (!$sample) return 'string';
         
         // Check sample value
-        if ($this->is_serialized($sample)) {
+        if (is_serialized($sample)) {
             return 'json';
         }
         if (is_numeric($sample)) {

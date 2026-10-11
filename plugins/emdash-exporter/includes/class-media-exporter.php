@@ -67,7 +67,6 @@ class EmDash_Media_Exporter {
             'id' => $attachment->ID,
             'url' => $url,
             'filename' => basename($url),
-            'file_path' => $file_path,
             'mime_type' => $attachment->post_mime_type,
             'title' => $attachment->post_title,
             'alt' => get_post_meta($attachment->ID, '_wp_attachment_image_alt', true),
@@ -152,9 +151,10 @@ class EmDash_Media_Exporter {
             // Single values
             $custom[$key] = count($values) === 1 ? $values[0] : $values;
             
-            // Try to unserialize
-            if (is_string($custom[$key]) && $this->is_serialized($custom[$key])) {
-                $unserialized = @unserialize($custom[$key]);
+            // Decode PHP-serialized data. allowed_classes=false prevents
+            // object injection from untrusted database values.
+            if (is_string($custom[$key]) && is_serialized($custom[$key])) {
+                $unserialized = @unserialize($custom[$key], ['allowed_classes' => false]);
                 if ($unserialized !== false) {
                     $custom[$key] = $unserialized;
                 }
@@ -162,16 +162,5 @@ class EmDash_Media_Exporter {
         }
         
         return $custom;
-    }
-    
-    /**
-     * Check if a string is PHP serialized
-     */
-    private function is_serialized($data) {
-        if (!is_string($data)) return false;
-        $data = trim($data);
-        if ($data === 'N;') return true;
-        if (preg_match('/^([aOsbi]):/', $data)) return true;
-        return false;
     }
 }
