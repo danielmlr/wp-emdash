@@ -90,6 +90,7 @@ All endpoints are under `/wp-json/emdash/v1/`
 - Site identity in `/options`: custom logo and site icon with resolved URLs, so EmDash can take over title, tagline, logo, and favicon
 - Wizard overview now lists comments and site identity as migrated
 - `/taxonomies` now includes each taxonomy's singular label and registered post types, so EmDash can auto-create custom post type taxonomies scoped to the right collections
+- Security: ACF relationship, post object, user and taxonomy fields are exported as IDs instead of whole WordPress objects, which could include related posts' `post_password` and users' `user_pass` hash
 
 ### 1.1.0
 
