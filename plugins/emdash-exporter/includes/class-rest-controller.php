@@ -122,24 +122,21 @@ class EmDash_Exporter_REST_Controller {
     }
     
     /**
-     * Check if user has permission to export
+     * Check if user has permission to export.
+     *
+     * Requires the `export` capability (by default only Administrators). The
+     * export exposes all content including drafts, private posts, author
+     * emails, and site options -- `edit_posts` (Contributors) is not enough.
      */
     public function check_permission() {
-        // Allow if user is logged in and can export
         if (current_user_can('export')) {
-            return true;
-        }
-        
-        // Check for Application Password authentication
-        // WordPress 5.6+ supports this natively
-        if (is_user_logged_in() && current_user_can('edit_posts')) {
             return true;
         }
         
         return new WP_Error(
             'rest_forbidden',
             __('You must be authenticated with export permissions.', 'emdash-exporter'),
-            ['status' => 401]
+            ['status' => rest_authorization_required_code()]
         );
     }
     
