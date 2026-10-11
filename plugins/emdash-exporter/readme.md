@@ -5,7 +5,7 @@
     Requires at least: 5.6
     Tested up to: 6.4
     Requires PHP: 7.4
-    Stable tag: 1.2.0
+    Stable tag: 1.2.1
     License: GPL3
     License URI: https://opensource.org/license/gpl-3.0
 
@@ -83,6 +83,10 @@ All endpoints are under `/wp-json/emdash/v1/`
 > Full ACF support. Field groups are analyzed, and field values are exported with proper type information.
 
 ## Changelog
+
+### 1.2.1
+
+- Test entry for the release workflow, with `code` and a $1 sign
 
 ### 1.2.0
 
