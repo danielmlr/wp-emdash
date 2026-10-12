@@ -54,7 +54,7 @@ All endpoints are under `/wp-json/emdash/v1/`
 - `GET /analyze` – Full site analysis for import planning
 - `GET /content?post_type=post` – Get posts (paginated)
 - `GET /media` – Get media items (paginated)
-- `GET /media/{id}?include_data=true` – Get single media item with base64 data
+- `GET /media/{id}` – Get a single media item
 - `GET /taxonomies` – Get all taxonomies and terms
 - `GET /options` – Get site options
 - `GET /menus` – Get navigation menus with items and hierarchy
@@ -72,7 +72,7 @@ All endpoints are under `/wp-json/emdash/v1/`
 
 ### What about my media files?
 
-> Media URLs are included in the export. EmDash downloads them directly from your WordPress site during import. Optionally, small files can be transferred inline as base64.
+> Media URLs are included in the export. EmDash downloads them directly from your WordPress site during import.
 
 ### Does this work with custom post types?
 

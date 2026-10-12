@@ -84,11 +84,6 @@ class EmDash_Exporter_REST_Controller {
                     'default' => 1,
                     'minimum' => 1,
                 ],
-                'include_data' => [
-                    'type' => 'boolean',
-                    'default' => false,
-                    'description' => 'Include base64-encoded file data (use with caution)',
-                ],
             ],
         ]);
         
@@ -100,10 +95,6 @@ class EmDash_Exporter_REST_Controller {
                 'id' => [
                     'required' => true,
                     'type' => 'integer',
-                ],
-                'include_data' => [
-                    'type' => 'boolean',
-                    'default' => false,
                 ],
             ],
         ]);
@@ -308,20 +299,16 @@ class EmDash_Exporter_REST_Controller {
         $exporter = new EmDash_Media_Exporter();
         return $exporter->get_media(
             $request->get_param('per_page'),
-            $request->get_param('page'),
-            $request->get_param('include_data')
+            $request->get_param('page')
         );
     }
     
     /**
-     * Get single media item with optional data
+     * Get single media item
      */
     public function get_media_item($request) {
         $exporter = new EmDash_Media_Exporter();
-        return $exporter->get_media_item(
-            $request->get_param('id'),
-            $request->get_param('include_data')
-        );
+        return $exporter->get_media_item($request->get_param('id'));
     }
     
     /**
