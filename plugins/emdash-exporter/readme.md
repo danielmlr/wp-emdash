@@ -3,13 +3,13 @@
     Contributors: ascorbic
     Tags: export, migration, cms, emdash, astro
     Requires at least: 5.6
-    Tested up to: 6.4
+    Tested up to: 7.1
     Requires PHP: 7.4
     Stable tag: 1.2.0
     License: GPL3
     License URI: https://opensource.org/license/gpl-3.0
 
-Migrate your WordPress site to EmDash CMS with a guided wizard. Full support for posts, pages, custom post types, ACF fields, media, menus, translations, and SEO data.
+Migrate your WordPress site to EmDash CMS with a guided wizard: posts, pages, custom post types, ACF fields, media, menus, translations, and SEO.
 
 ## Description
 

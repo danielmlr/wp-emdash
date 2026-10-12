@@ -169,24 +169,20 @@ class EmDash_Exporter_REST_Controller {
      * Header check endpoint - reports whether an Authorization header arrived
      */
     public function header_check() {
-        $header = null;
-        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $header = $_SERVER['HTTP_AUTHORIZATION'];
-        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
-        } elseif (function_exists('getallheaders')) {
+        $received = !empty($_SERVER['HTTP_AUTHORIZATION']) || !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+        if (!$received && function_exists('getallheaders')) {
             // mod_php can expose the header via the Apache API only,
             // without populating $_SERVER['HTTP_AUTHORIZATION'].
             foreach (getallheaders() as $name => $value) {
                 if (strtolower($name) === 'authorization') {
-                    $header = $value;
+                    $received = !empty($value);
                     break;
                 }
             }
         }
         
         return [
-            'authorization_header_received' => !empty($header),
+            'authorization_header_received' => $received,
         ];
     }
     
