@@ -32,7 +32,7 @@ EmDash Exporter adds a guided migration wizard (Tools → EmDash Migration) and 
 
 ## Authentication
 
-Uses WordPress Application Passwords (built into WordPress 5.6+). The wizard creates one for you and packages it into a single migration key. You can revoke it at any time.
+Uses WordPress Application Passwords (built into WordPress 5.6+). The wizard creates one for you and packages it into a single migration key. You can revoke it at any time, and deactivating or deleting the plugin revokes it for every user.
 
 ## Installation
 
