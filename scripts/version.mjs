@@ -6,15 +6,16 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const PLUGIN_FILE = "plugins/emdash-exporter/emdash-exporter.php";
-const README_FILE = "plugins/emdash-exporter/readme.md";
+const README_FILE = "plugins/emdash-exporter/readme.txt";
 
 // `changeset version` deletes the changeset files, so read the summaries first.
 const summaries = readdirSync(".changeset")
 	.filter((name) => name.endsWith(".md") && name !== "README.md")
 	.sort()
 	.map((name) => {
-		const text = readFileSync(`.changeset/${name}`, "utf8");
-		return text.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+		const text = readFileSync(`.changeset/${name}`, "utf8").replace(/\r\n/g, "\n");
+		const [, releases = "", summary = ""] = text.match(/^---\n([\s\S]*?)^---\n([\s\S]*)/m) ?? [];
+		return releases.trim() ? summary.trim() : "";
 	})
 	.filter(Boolean);
 
@@ -39,5 +40,9 @@ replaceOnce(
 );
 replaceOnce(README_FILE, /^([ \t]*Stable tag: ).+$/m, `$1${version}`);
 
-const entries = summaries.map((summary) => `- ${summary.replace(/\n/g, "\n  ")}`).join("\n");
-replaceOnce(README_FILE, /^## Changelog\n\n/m, () => `## Changelog\n\n### ${version}\n\n${entries}\n\n`);
+const entries = summaries.map((summary) => `* ${summary.replace(/\n/g, "\n  ")}`).join("\n");
+replaceOnce(
+	README_FILE,
+	/^== Changelog ==\n\n/m,
+	() => `== Changelog ==\n\n= ${version} =\n\n${entries}\n\n`,
+);
