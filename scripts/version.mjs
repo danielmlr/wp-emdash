@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const PLUGIN_FILE = "plugins/emdash-exporter/emdash-exporter.php";
-const README_FILE = "plugins/emdash-exporter/readme.md";
+const README_FILE = "plugins/emdash-exporter/readme.txt";
 
 // `changeset version` deletes the changeset files, so read the summaries first.
 const summaries = readdirSync(".changeset")
@@ -40,5 +40,9 @@ replaceOnce(
 );
 replaceOnce(README_FILE, /^([ \t]*Stable tag: ).+$/m, `$1${version}`);
 
-const entries = summaries.map((summary) => `- ${summary.replace(/\n/g, "\n  ")}`).join("\n");
-replaceOnce(README_FILE, /^## Changelog\n\n/m, () => `## Changelog\n\n### ${version}\n\n${entries}\n\n`);
+const entries = summaries.map((summary) => `* ${summary.replace(/\n/g, "\n  ")}`).join("\n");
+replaceOnce(
+	README_FILE,
+	/^== Changelog ==\n\n/m,
+	() => `== Changelog ==\n\n= ${version} =\n\n${entries}\n\n`,
+);
