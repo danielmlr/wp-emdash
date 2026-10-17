@@ -4,7 +4,7 @@ Tags: export, migration, cms, emdash, astro
 Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -92,6 +92,10 @@ Field groups are analyzed, and field values are exported with type information. 
 3. Connect from an existing EmDash site or deploy a new one, and see what will and won't be migrated.
 
 == Changelog ==
+
+= 1.3.0 =
+
+* Test only: a changeset to exercise the readme.txt changelog
 
 = 1.2.0 =
 
